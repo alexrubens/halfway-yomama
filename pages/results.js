@@ -6,70 +6,59 @@ function ResultsPage() {
   const { location1, location2, destinations, departureDate, adults } =
     router.query;
 
-  const [flights, setFlights] = useState([]);
+  const [flights, setFlights] = useState({});
 
   useEffect(() => {
     if (location1 && location2 && destinations && departureDate && adults) {
+      const apiKey = 'Z38kFL4gr2OGGPq6tG4ZOX7tayurhDfF';
+      const apiSecret = '33r8UF8KI38pmuN0';
       const destinationList = destinations
         .split(',')
         .map((destination) => destination.trim());
+      const flightData = {};
 
       const fetchData = async () => {
-        // Acquiring the access token
-        const responseToken = await fetch(
+        const tokenResponse = await fetch(
           'https://test.api.amadeus.com/v1/security/oauth2/token',
           {
             method: 'POST',
-            body: new URLSearchParams({
-              client_id: 'Z38kFL4gr2OGGPq6tG4ZOX7tayurhDfF',
-              client_secret: '33r8UF8KI38pmuN0',
-              grant_type: 'client_credentials',
-            }),
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded',
             },
+            body: `grant_type=client_credentials&client_id=${apiKey}&client_secret=${apiSecret}`,
           }
         );
-
-        const dataToken = await responseToken.json();
-        const accessToken = dataToken.access_token;
-
-        const baseUrl =
-          'https://test.api.amadeus.com/v2/shopping/flight-offers';
-
-        const flightData = [];
+        const { access_token } = await tokenResponse.json();
 
         for (const destination of destinationList) {
           const response1 = await fetch(
-            `${baseUrl}?originLocationCode=${location1}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}`,
+            `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${location1}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}`,
             {
               headers: {
-                Authorization: `Bearer ${accessToken}`,
+                Authorization: 'Bearer ' + access_token,
               },
             }
           );
           const data1 = await response1.json();
-
           const response2 = await fetch(
-            `${baseUrl}?originLocationCode=${location2}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}`,
+            `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${location2}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}`,
             {
               headers: {
-                Authorization: `Bearer ${accessToken}`,
+                Authorization: 'Bearer ' + access_token,
               },
             }
           );
           const data2 = await response2.json();
-
           if (data1.data && data1.data[0]) {
-            flightData.push({
-              location: location1,
+            if (!flightData[location1]) flightData[location1] = [];
+            flightData[location1].push({
               destination,
               flight: data1.data[0],
             });
           }
           if (data2.data && data2.data[0]) {
-            flightData.push({
-              location: location2,
+            if (!flightData[location2]) flightData[location2] = [];
+            flightData[location2].push({
               destination,
               flight: data2.data[0],
             });
@@ -86,12 +75,25 @@ function ResultsPage() {
   return (
     <div>
       <h1>Results</h1>
-      {flights.map((flightInfo, index) => (
-        <div key={index}>
-          <h2>
-            Flight from {flightInfo.location} to {flightInfo.destination}
-          </h2>
-          <p>Price: {flightInfo.flight.price.total}</p>
+      {Object.entries(flights).map(([location, flightInfos]) => (
+        <div key={location}>
+          <h2>Flights from {location}</h2>
+          {flightInfos.map((flightInfo, index) => (
+            <div key={index}>
+              <h3>Destination: {flightInfo.destination}</h3>
+              <p>Price: {flightInfo.flight.price.total}</p>
+              <h4>Flight Details:</h4>
+              <p>Duration: {flightInfo.flight.itineraries[0].duration}</p>
+              <p>
+                Number of Stops:{' '}
+                {flightInfo.flight.itineraries[0].segments.length - 1}
+              </p>
+              <p>
+                Airline:{' '}
+                {flightInfo.flight.itineraries[0].segments[0].carrierCode}
+              </p>
+            </div>
+          ))}
         </div>
       ))}
     </div>
