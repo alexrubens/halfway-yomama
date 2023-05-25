@@ -7,6 +7,7 @@ function ResultsPage() {
     router.query;
 
   const [flights, setFlights] = useState({});
+  const [cheapestDestination, setCheapestDestination] = useState('');
 
   useEffect(() => {
     if (location1 && location2 && destinations && departureDate && adults) {
@@ -30,6 +31,9 @@ function ResultsPage() {
         );
         const { access_token } = await tokenResponse.json();
 
+        let minPrice = Infinity;
+        let minDestination = '';
+
         for (const destination of destinationList) {
           const response1 = await fetch(
             `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${location1}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}`,
@@ -49,12 +53,15 @@ function ResultsPage() {
             }
           );
           const data2 = await response2.json();
+          let totalDestinationPrice = 0;
+
           if (data1.data && data1.data[0]) {
             if (!flightData[location1]) flightData[location1] = [];
             flightData[location1].push({
               destination,
               flight: data1.data[0],
             });
+            totalDestinationPrice += parseFloat(data1.data[0].price.total);
           }
           if (data2.data && data2.data[0]) {
             if (!flightData[location2]) flightData[location2] = [];
@@ -62,10 +69,17 @@ function ResultsPage() {
               destination,
               flight: data2.data[0],
             });
+            totalDestinationPrice += parseFloat(data2.data[0].price.total);
+          }
+
+          if (totalDestinationPrice < minPrice) {
+            minPrice = totalDestinationPrice;
+            minDestination = destination;
           }
         }
 
         setFlights(flightData);
+        setCheapestDestination(minDestination);
       };
 
       fetchData();
@@ -75,11 +89,27 @@ function ResultsPage() {
   return (
     <div>
       <h1>Results</h1>
+      {cheapestDestination && (
+        <h2 style={{ color: 'green' }}>
+          {cheapestDestination.toUpperCase()} IS THE CHEAPEST
+        </h2>
+      )}
       {Object.entries(flights).map(([location, flightInfos]) => (
         <div key={location}>
           <h2>Flights from {location}</h2>
           {flightInfos.map((flightInfo, index) => (
-            <div key={index}>
+            <div
+              key={index}
+              style={{
+                backgroundColor:
+                  flightInfo.destination === cheapestDestination
+                    ? 'lightgreen'
+                    : 'white',
+                margin: '10px',
+                padding: '10px',
+                borderRadius: '5px',
+              }}
+            >
               <h3>Destination: {flightInfo.destination}</h3>
               <p>Price: {flightInfo.flight.price.total}</p>
               <h4>Flight Details:</h4>
