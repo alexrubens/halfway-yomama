@@ -11,6 +11,18 @@ const cityNames = {
   JFK: 'New York, NY (JFK)',
 };
 
+const airlineNames = {
+  AA: 'American Airlines',
+  DL: 'Delta Air Lines',
+  UA: 'United Airlines',
+  B6: 'JetBlue Airways',
+  AS: 'Alaska Airlines',
+  NK: 'Spirit Airlines',
+  WN: 'Southwest Airlines',
+  F9: 'Frontier Airlines',
+  HA: 'Hawaiian Airlines',
+};
+
 function CheapestOnlyPage() {
   const router = useRouter();
   const { location1, location2, destinations, departureDate, adults } =
@@ -146,7 +158,10 @@ function CheapestOnlyPage() {
             {flightInfo.flight.itineraries[0].segments.length - 1}
           </p>
           <p>
-            Airline: {flightInfo.flight.itineraries[0].segments[0].carrierCode}
+            Airline:{' '}
+            {airlineNames[
+              flightInfo.flight.itineraries[0].segments[0].carrierCode
+            ] || flightInfo.flight.itineraries[0].segments[0].carrierCode}
           </p>
         </div>
       ))}

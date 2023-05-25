@@ -4,11 +4,22 @@ import { useEffect, useState } from 'react';
 const cityNames = {
   LAX: 'Los Angeles, CA (LAX)',
   SFO: 'San Francisco, CA (SFO)',
-  DFW: 'Dallas, TX (DFW)',
   SEA: 'Seattle, WA (SEA)',
+  DFW: 'Dallas, TX (DFW)',
   MIA: 'Miami, FL (MIA)',
   LAS: 'Las Vegas, NV (LAS)',
   JFK: 'New York, NY (JFK)',
+};
+
+const airlineCodes = {
+  AA: 'American Airlines',
+  DL: 'Delta Airlines',
+  UA: 'United Airlines',
+  B6: 'JetBlue Airways',
+  WN: 'Southwest Airlines',
+  AS: 'Alaska Airlines',
+  NK: 'Spirit Airlines',
+  F9: 'Frontier Airlines',
 };
 
 function ResultsPage() {
@@ -87,13 +98,10 @@ function ResultsPage() {
       <h1>Results</h1>
       {Object.entries(flights).map(([location, flightInfos]) => (
         <div key={location}>
-          <h2>Flights from {cityNames[location] || location}</h2>
+          <h2>Flights from {cityNames[location]}</h2>
           {flightInfos.map((flightInfo, index) => (
             <div key={index}>
-              <h3>
-                Destination:{' '}
-                {cityNames[flightInfo.destination] || flightInfo.destination}
-              </h3>
+              <h3>Destination: {cityNames[flightInfo.destination]}</h3>
               <p>Price: {flightInfo.flight.price.total}</p>
               <h4>Flight Details:</h4>
               <p>Duration: {flightInfo.flight.itineraries[0].duration}</p>
@@ -103,7 +111,11 @@ function ResultsPage() {
               </p>
               <p>
                 Airline:{' '}
-                {flightInfo.flight.itineraries[0].segments[0].carrierCode}
+                {
+                  airlineCodes[
+                    flightInfo.flight.itineraries[0].segments[0].carrierCode
+                  ]
+                }
               </p>
             </div>
           ))}
