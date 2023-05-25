@@ -1,26 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-
-const cityNames = {
-  LAX: 'Los Angeles, CA (LAX)',
-  SFO: 'San Francisco, CA (SFO)',
-  SEA: 'Seattle, WA (SEA)',
-  DFW: 'Dallas, TX (DFW)',
-  MIA: 'Miami, FL (MIA)',
-  LAS: 'Las Vegas, NV (LAS)',
-  JFK: 'New York, NY (JFK)',
-};
-
-const airlineCodes = {
-  AA: 'American Airlines',
-  DL: 'Delta Airlines',
-  UA: 'United Airlines',
-  B6: 'JetBlue Airways',
-  WN: 'Southwest Airlines',
-  AS: 'Alaska Airlines',
-  NK: 'Spirit Airlines',
-  F9: 'Frontier Airlines',
-};
+import cityNames from '../data/CityNames';
+import airlineCodes from '../data/AirlineNames';
 
 export default function HomePage() {
   const router = useRouter();

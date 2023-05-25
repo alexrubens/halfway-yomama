@@ -1,38 +1,12 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-
-const cityNames = {
-  LAX: 'Los Angeles, CA (LAX)',
-  SFO: 'San Francisco, CA (SFO)',
-  DFW: 'Dallas, TX (DFW)',
-  SEA: 'Seattle, WA (SEA)',
-  MIA: 'Miami, FL (MIA)',
-  LAS: 'Las Vegas, NV (LAS)',
-  JFK: 'New York, NY (JFK)',
-};
-
-const airlineNames = {
-  AA: 'American Airlines',
-  DL: 'Delta Air Lines',
-  UA: 'United Airlines',
-  B6: 'JetBlue Airways',
-  AS: 'Alaska Airlines',
-  NK: 'Spirit Airlines',
-  WN: 'Southwest Airlines',
-  F9: 'Frontier Airlines',
-  HA: 'Hawaiian Airlines',
-};
+import cityNames from '../data/CityNames';
+import airlineNames from '../data/AirlineNames';
 
 function CheapestOnlyPage() {
   const router = useRouter();
-  const {
-    location1,
-    location2,
-    destinations,
-    departureDate,
-    adults,
-    airlines,
-  } = router.query;
+  const { location1, location2, destinations, departureDate, adults } =
+    router.query;
 
   const [flights, setFlights] = useState({});
   const [cheapestFlights, setCheapestFlights] = useState({});
@@ -40,20 +14,12 @@ function CheapestOnlyPage() {
   const [cheapestDestination, setCheapestDestination] = useState(null);
 
   useEffect(() => {
-    if (
-      location1 &&
-      location2 &&
-      destinations &&
-      departureDate &&
-      adults &&
-      airlines
-    ) {
+    if (location1 && location2 && destinations && departureDate && adults) {
       const apiKey = 'Z38kFL4gr2OGGPq6tG4ZOX7tayurhDfF';
       const apiSecret = '33r8UF8KI38pmuN0';
       const destinationList = destinations
         .split(',')
         .map((destination) => destination.trim());
-      const airlinesList = airlines.split(',').map((airline) => airline.trim());
       const flightData = {};
 
       const fetchData = async () => {
@@ -73,9 +39,7 @@ function CheapestOnlyPage() {
 
         for (const destination of destinationList) {
           const response1 = await fetch(
-            `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${location1}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}&includedAirlineCodes=${airlinesList.join(
-              ','
-            )}`,
+            `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${location1}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}`,
             {
               headers: {
                 Authorization: 'Bearer ' + access_token,
@@ -84,9 +48,7 @@ function CheapestOnlyPage() {
           );
           const data1 = await response1.json();
           const response2 = await fetch(
-            `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${location2}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}&includedAirlineCodes=${airlinesList.join(
-              ','
-            )}`,
+            `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${location2}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}`,
             {
               headers: {
                 Authorization: 'Bearer ' + access_token,
@@ -146,7 +108,7 @@ function CheapestOnlyPage() {
 
       fetchData();
     }
-  }, [location1, location2, destinations, departureDate, adults, airlines]);
+  }, [location1, location2, destinations, departureDate, adults]);
 
   return (
     <div>
