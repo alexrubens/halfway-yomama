@@ -1,3 +1,4 @@
+// pages/index.js
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import cityNames from '../data/CityNames';
