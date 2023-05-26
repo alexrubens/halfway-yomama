@@ -8,18 +8,20 @@ function CheapestOnlyPage() {
   const { location1, location2, destinations, departureDate, adults } =
     router.query;
 
+  const destinationList =
+    destinations && destinations.trim().length > 0
+      ? destinations.split(',').map((destination) => destination.trim())
+      : Object.keys(cityNames);
+
   const [flights, setFlights] = useState({});
   const [cheapestFlights, setCheapestFlights] = useState({});
   const [searchProgress, setSearchProgress] = useState(0);
   const [cheapestDestination, setCheapestDestination] = useState(null);
 
   useEffect(() => {
-    if (location1 && location2 && destinations && departureDate && adults) {
+    if (location1 && location2 && departureDate && adults) {
       const apiKey = 'Z38kFL4gr2OGGPq6tG4ZOX7tayurhDfF';
       const apiSecret = '33r8UF8KI38pmuN0';
-      const destinationList = destinations
-        .split(',')
-        .map((destination) => destination.trim());
       const flightData = {};
 
       const fetchData = async () => {
@@ -108,11 +110,11 @@ function CheapestOnlyPage() {
 
       fetchData();
     }
-  }, [location1, location2, destinations, departureDate, adults]);
+  }, [location1, location2, departureDate, adults]);
 
   return (
     <div>
-      <h1>Cheapest Flights Only</h1>
+      <h1>Halfway is Where Your Friends Are</h1>
       <div>
         <div
           style={{

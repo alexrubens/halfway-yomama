@@ -7,7 +7,7 @@ export default function HomePage() {
   const router = useRouter();
   const [location1, setLocation1] = useState('');
   const [location2, setLocation2] = useState('');
-  const [destinations, setDestinations] = useState('');
+  const [destinations, setDestinations] = useState(''); // Updated
   const [departureDate, setDepartureDate] = useState('');
   const [adults, setAdults] = useState('');
   const [cheapestOnly, setCheapestOnly] = useState(false);
@@ -30,7 +30,7 @@ export default function HomePage() {
       query: {
         location1,
         location2,
-        destinations,
+        destinations, // Updated
         departureDate,
         adults,
         airlines: selectedAirlines.join(','),
@@ -58,8 +58,7 @@ export default function HomePage() {
         />
         <input
           type="text"
-          required
-          placeholder="Destinations"
+          placeholder="Destinations (optional)" // Updated
           value={destinations}
           onChange={(e) => setDestinations(e.target.value)}
         />
