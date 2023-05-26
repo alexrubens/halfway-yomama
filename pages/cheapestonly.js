@@ -114,7 +114,12 @@ function CheapestOnlyPage() {
           <div>
             <h4>From {location1}:</h4>
             <p>
-              Airline: {cheapestFlights.location1.flight.validatingAirlineCodes}
+              Airline:{' '}
+              {
+                airlineNames[
+                  cheapestFlights.location1.flight.validatingAirlineCodes
+                ]
+              }
             </p>
             <p>
               Departure:{' '}
@@ -135,7 +140,12 @@ function CheapestOnlyPage() {
           <div>
             <h4>From {location2}:</h4>
             <p>
-              Airline: {cheapestFlights.location2.flight.validatingAirlineCodes}
+              Airline:{' '}
+              {
+                airlineNames[
+                  cheapestFlights.location2.flight.validatingAirlineCodes
+                ]
+              }
             </p>
             <p>
               Departure:{' '}
