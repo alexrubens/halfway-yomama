@@ -1,168 +1,128 @@
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
 import cityNames from '../data/CityNames';
 import airlineNames from '../data/AirlineNames';
+import flights from '../data/Flights';
 
 function CheapestOnlyPage() {
   const router = useRouter();
-  const { location1, location2, destinations, departureDate, adults } =
-    router.query;
+  const {
+    location1,
+    location2,
+    destinations,
+    departureDate,
+    adults,
+    airlines,
+  } = router.query;
+
+  // Assuming cityNames is a dictionary of {cityCode: cityName}, let's get the city codes for location1 and location2
+  const location1Code = Object.keys(cityNames).find(
+    (code) => cityNames[code] === location1
+  );
+  const location2Code = Object.keys(cityNames).find(
+    (code) => cityNames[code] === location2
+  );
+
+  // Check if location codes exist
+  if (!location1Code || !location2Code) {
+    return (
+      <div>
+        <h1>No matching locations found</h1>
+        <p>Please adjust your search criteria.</p>
+      </div>
+    );
+  }
 
   const destinationList =
-    destinations && destinations.trim().length > 0
+    destinations && destinations.length > 0
       ? destinations.split(',').map((destination) => destination.trim())
       : Object.keys(cityNames);
+  const selectedAirlines = airlines ? airlines.split(',') : [];
 
-  const [flights, setFlights] = useState({});
-  const [cheapestFlights, setCheapestFlights] = useState({});
-  const [searchProgress, setSearchProgress] = useState(0);
-  const [cheapestDestination, setCheapestDestination] = useState(null);
+  let filteredFlights = flights;
 
-  useEffect(() => {
-    if (location1 && location2 && departureDate && adults) {
-      const apiKey = 'Z38kFL4gr2OGGPq6tG4ZOX7tayurhDfF';
-      const apiSecret = '33r8UF8KI38pmuN0';
-      const flightData = {};
+  // Apply airline filter
+  if (selectedAirlines && selectedAirlines.length > 0) {
+    filteredFlights = filteredFlights.filter((flight) =>
+      selectedAirlines.includes(flight.airline)
+    );
+  }
 
-      const fetchData = async () => {
-        const tokenResponse = await fetch(
-          'https://test.api.amadeus.com/v1/security/oauth2/token',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `grant_type=client_credentials&client_id=${apiKey}&client_secret=${apiSecret}`,
-          }
-        );
-        const { access_token } = await tokenResponse.json();
+  let flightsFromLocation1 = filteredFlights.filter(
+    (flight) => flight.originCityCode === location1Code
+  );
+  let flightsFromLocation2 = filteredFlights.filter(
+    (flight) => flight.originCityCode === location2Code
+  );
 
-        let completedSearches = 0;
+  let mutualDestinations = flightsFromLocation1
+    .map((flight) => flight.destinationCityCode)
+    .filter((destination) =>
+      flightsFromLocation2.some(
+        (flight) => flight.destinationCityCode === destination
+      )
+    );
 
-        for (const destination of destinationList) {
-          const response1 = await fetch(
-            `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${location1}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}`,
-            {
-              headers: {
-                Authorization: 'Bearer ' + access_token,
-              },
-            }
-          );
-          const data1 = await response1.json();
-          const response2 = await fetch(
-            `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${location2}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}`,
-            {
-              headers: {
-                Authorization: 'Bearer ' + access_token,
-              },
-            }
-          );
-          const data2 = await response2.json();
-          if (data1.data && data1.data[0]) {
-            if (!flightData[location1]) flightData[location1] = [];
-            flightData[location1].push({
-              destination,
-              flight: data1.data[0],
-            });
-          }
-          if (data2.data && data2.data[0]) {
-            if (!flightData[location2]) flightData[location2] = [];
-            flightData[location2].push({
-              destination,
-              flight: data2.data[0],
-            });
-          }
+  flightsFromLocation1 = flightsFromLocation1.filter((flight) =>
+    mutualDestinations.includes(flight.destinationCityCode)
+  );
 
-          completedSearches++;
-          setSearchProgress((completedSearches / destinationList.length) * 100);
-        }
+  flightsFromLocation2 = flightsFromLocation2.filter((flight) =>
+    mutualDestinations.includes(flight.destinationCityCode)
+  );
 
-        if (Object.keys(flightData).length) {
-          const cheapestFlightsData = {};
+  if (flightsFromLocation1.length === 0 || flightsFromLocation2.length === 0) {
+    return (
+      <div>
+        <h1>No matching flights found</h1>
+        <p>Please adjust your search criteria.</p>
+      </div>
+    );
+  }
 
-          for (const [location, flightInfos] of Object.entries(flightData)) {
-            cheapestFlightsData[location] = flightInfos.reduce(
-              (prev, current) =>
-                prev.flight.price.total < current.flight.price.total
-                  ? prev
-                  : current
-            );
-          }
+  const cheapestFlightFromLocation1 = flightsFromLocation1.reduce(
+    (prev, current) => (prev.price < current.price ? prev : current),
+    flightsFromLocation1[0]
+  );
 
-          const combined = Object.values(cheapestFlightsData).reduce((a, b) => {
-            const totalA = parseFloat(a.flight.price.total);
-            const totalB = parseFloat(b.flight.price.total);
-            return totalA < totalB ? a : b;
-          });
+  const cheapestFlightFromLocation2 = flightsFromLocation2.reduce(
+    (prev, current) => (prev.price < current.price ? prev : current),
+    flightsFromLocation2[0]
+  );
 
-          const totalCost = Object.values(cheapestFlightsData).reduce(
-            (total, flightInfo) => {
-              return total + parseFloat(flightInfo.flight.price.total);
-            },
-            0
-          );
+  const cheapestOverallDestination =
+    cheapestFlightFromLocation1.price < cheapestFlightFromLocation2.price
+      ? cheapestFlightFromLocation1.destinationCityCode
+      : cheapestFlightFromLocation2.destinationCityCode;
 
-          setCheapestDestination({ ...combined, totalCost });
-          setFlights(flightData);
-          setCheapestFlights(cheapestFlightsData);
-        }
-      };
+  const totalCost =
+    cheapestFlightFromLocation1.price + cheapestFlightFromLocation2.price;
 
-      fetchData();
-    }
-  }, [location1, location2, departureDate, adults]);
+  const averageCost = totalCost / 2;
 
   return (
     <div>
-      <h1>Halfway is Where Your Friends Are</h1>
-      <div>
-        <div
-          style={{
-            width: `${searchProgress}%`,
-            backgroundColor: 'green',
-            height: '20px',
-          }}
-        ></div>
-      </div>
-      <p>{`Progress: ${Math.round(searchProgress)}%`}</p>
-      {Object.entries(cheapestFlights).map(([location, flightInfo]) => (
-        <div key={location}>
-          <h2>Flights from {cityNames[location] || location}</h2>
-          <h3>
-            Destination:{' '}
-            {cityNames[flightInfo.destination] || flightInfo.destination}
-          </h3>
-          <p>Price: {flightInfo.flight.price.total}</p>
-          <h4>Flight Details:</h4>
-          <p>Duration: {flightInfo.flight.itineraries[0].duration}</p>
-          <p>
-            Number of Stops:{' '}
-            {flightInfo.flight.itineraries[0].segments.length - 1}
-          </p>
-          <p>
-            Airline:{' '}
-            {airlineNames[
-              flightInfo.flight.itineraries[0].segments[0].carrierCode
-            ] || flightInfo.flight.itineraries[0].segments[0].carrierCode}
-          </p>
-        </div>
-      ))}
-      {cheapestDestination && (
-        <div>
-          <h2>
-            Cheapest Overall Destination:{' '}
-            {cityNames[cheapestDestination.destination] ||
-              cheapestDestination.destination}
-          </h2>
-          <h3>Total Cost: {cheapestDestination.totalCost.toFixed(2)}</h3>
-          <h3>
-            Average Cost (If Split Evenly):{' '}
-            {(cheapestDestination.totalCost / 2).toFixed(2)}
-          </h3>
-        </div>
-      )}
+      <h1>Cheapest Flights Only</h1>
+      <p>Progress: 100%</p>
+      <h2>Flights from {location1}</h2>
+      <p>Destination: {cheapestFlightFromLocation1.destinationCityCode}</p>
+      <p>Price: {cheapestFlightFromLocation1.price}</p>
+      <p>Flight Details:</p>
+      <p>Duration: {cheapestFlightFromLocation1.duration}</p>
+      <p>Number of Stops: {cheapestFlightFromLocation1.stops}</p>
+      <p>Airline: {airlineNames[cheapestFlightFromLocation1.airline]}</p>
+
+      <h2>Flights from {location2}</h2>
+      <p>Destination: {cheapestFlightFromLocation2.destinationCityCode}</p>
+      <p>Price: {cheapestFlightFromLocation2.price}</p>
+      <p>Flight Details:</p>
+      <p>Duration: {cheapestFlightFromLocation2.duration}</p>
+      <p>Number of Stops: {cheapestFlightFromLocation2.stops}</p>
+      <p>Airline: {airlineNames[cheapestFlightFromLocation2.airline]}</p>
+
+      <h2>Cheapest Overall Destination: {cheapestOverallDestination}</h2>
+      <p>Total Cost: {totalCost}</p>
+      <p>Average Cost (If Split Evenly): {averageCost}</p>
     </div>
   );
 }
-
 export default CheapestOnlyPage;
