@@ -26,12 +26,22 @@ export default function HomePage() {
 
   const submitHandler = (event) => {
     event.preventDefault();
+    console.log('Search button clicked');
+    const route = cheapestOnly ? '/cheapestonly' : '/results';
+    console.log(`Redirecting to ${route} with query params`, {
+      location1,
+      location2,
+      destinations,
+      departureDate,
+      adults,
+      airlines: selectedAirlines.join(','),
+    });
     router.push({
-      pathname: cheapestOnly ? '/cheapestonly' : '/results',
+      pathname: route,
       query: {
         location1,
         location2,
-        destinations, // Updated
+        destinations,
         departureDate,
         adults,
         airlines: selectedAirlines.join(','),
