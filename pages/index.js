@@ -1,4 +1,3 @@
-// pages/index.js
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import cityNames from '../data/CityNames';
@@ -8,10 +7,9 @@ export default function HomePage() {
   const router = useRouter();
   const [location1, setLocation1] = useState('');
   const [location2, setLocation2] = useState('');
-  const [destinations, setDestinations] = useState(''); // Updated
+  const [destinations, setDestinations] = useState('');
   const [departureDate, setDepartureDate] = useState('');
   const [adults, setAdults] = useState('');
-  const [cheapestOnly, setCheapestOnly] = useState(false);
   const [selectedAirlines, setSelectedAirlines] = useState(
     Object.keys(airlineCodes)
   );
@@ -27,11 +25,11 @@ export default function HomePage() {
   const submitHandler = (event) => {
     event.preventDefault();
     router.push({
-      pathname: cheapestOnly ? '/cheapestonly' : '/results',
+      pathname: '/cheapestonly',
       query: {
         location1,
         location2,
-        destinations, // Updated
+        destinations,
         departureDate,
         adults,
         airlines: selectedAirlines.join(','),
@@ -59,7 +57,7 @@ export default function HomePage() {
         />
         <input
           type="text"
-          placeholder="Destinations (optional)" // Updated
+          placeholder="Destinations (optional)"
           value={destinations}
           onChange={(e) => setDestinations(e.target.value)}
         />
@@ -76,14 +74,6 @@ export default function HomePage() {
           value={adults}
           onChange={(e) => setAdults(e.target.value)}
         />
-        <div>
-          <label>Search for cheapest flight only</label>
-          <input
-            type="checkbox"
-            checked={cheapestOnly}
-            onChange={(e) => setCheapestOnly(e.target.checked)}
-          />
-        </div>
         <div>
           <label>Select Airlines</label>
           {Object.entries(airlineCodes).map(([code, name]) => (

@@ -135,6 +135,22 @@ function CheapestOnlyPage() {
                   .arrival.at
               }
             </p>
+            <p>
+              Flight Number:{' '}
+              {
+                cheapestFlights.location1.flight.itineraries[0].segments[0]
+                  .flightNumber
+              }
+            </p>
+            <p>
+              Duration:{' '}
+              {cheapestFlights.location1.flight.itineraries[0].duration}
+            </p>
+            <p>
+              Number of Stops:{' '}
+              {cheapestFlights.location1.flight.itineraries[0].segments.length -
+                1}
+            </p>
             <p>Price: ${cheapestFlights.location1.total}</p>
           </div>
           <div>
@@ -160,6 +176,22 @@ function CheapestOnlyPage() {
                 cheapestFlights.location2.flight.itineraries[0].segments[0]
                   .arrival.at
               }
+            </p>
+            <p>
+              Flight Number:{' '}
+              {
+                cheapestFlights.location2.flight.itineraries[0].segments[0]
+                  .flightNumber
+              }
+            </p>
+            <p>
+              Duration:{' '}
+              {cheapestFlights.location2.flight.itineraries[0].duration}
+            </p>
+            <p>
+              Number of Stops:{' '}
+              {cheapestFlights.location2.flight.itineraries[0].segments.length -
+                1}
             </p>
             <p>Price: ${cheapestFlights.location2.total}</p>
           </div>
