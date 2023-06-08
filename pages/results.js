@@ -1,128 +1,117 @@
+import React, { useState, useEffect } from 'react';
+import Head from 'next/head';
+import CssBaseline from '@mui/material/CssBaseline';
+import cityNames from '../data/CityNames';
+import airlineNames from '../data/AirlineNames';
+import { Container, Box, Typography, Grid, Paper, CircularProgress } from '@mui/material';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
 
-const cityNames = {
-  LAX: 'Los Angeles, CA (LAX)',
-  SFO: 'San Francisco, CA (SFO)',
-  SEA: 'Seattle, WA (SEA)',
-  DFW: 'Dallas, TX (DFW)',
-  MIA: 'Miami, FL (MIA)',
-  LAS: 'Las Vegas, NV (LAS)',
-  JFK: 'New York, NY (JFK)',
-};
+const theme = createTheme();
 
-const airlineCodes = {
-  AA: 'American Airlines',
-  DL: 'Delta Airlines',
-  UA: 'United Airlines',
-  B6: 'JetBlue Airways',
-  WN: 'Southwest Airlines',
-  AS: 'Alaska Airlines',
-  NK: 'Spirit Airlines',
-  F9: 'Frontier Airlines',
-};
-
-function ResultsPage() {
+export default function Results() {
   const router = useRouter();
-  const { location1, location2, destinations, departureDate, adults } =
-    router.query;
 
-  const [flights, setFlights] = useState({});
+  const [cheapestFlights, setCheapestFlights] = useState({});
+  const [searching, setSearching] = useState(true);
+  const [cheapestDestination, setCheapestDestination] = useState('');
+  const [cheapestDestinationCost, setCheapestDestinationCost] = useState(0);
 
   useEffect(() => {
-    if (location1 && location2 && destinations && departureDate && adults) {
-      const apiKey = 'Z38kFL4gr2OGGPq6tG4ZOX7tayurhDfF';
-      const apiSecret = '33r8UF8KI38pmuN0';
-      const destinationList = destinations
-        .split(',')
-        .map((destination) => destination.trim());
-      const flightData = {};
+    const { location1, location2, destinations = '', departureDate, adults } = router.query;
+    const destinationList = destinations.split(',').map((destination) => destination.trim());
 
-      const fetchData = async () => {
-        const tokenResponse = await fetch(
-          'https://test.api.amadeus.com/v1/security/oauth2/token',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `grant_type=client_credentials&client_id=${apiKey}&client_secret=${apiSecret}`,
-          }
-        );
-        const { access_token } = await tokenResponse.json();
-
-        for (const destination of destinationList) {
-          const response1 = await fetch(
-            `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${location1}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}`,
-            {
-              headers: {
-                Authorization: 'Bearer ' + access_token,
-              },
-            }
-          );
-          const data1 = await response1.json();
-          const response2 = await fetch(
-            `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${location2}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}`,
-            {
-              headers: {
-                Authorization: 'Bearer ' + access_token,
-              },
-            }
-          );
-          const data2 = await response2.json();
-          if (data1.data && data1.data[0]) {
-            if (!flightData[location1]) flightData[location1] = [];
-            flightData[location1].push({
-              destination,
-              flight: data1.data[0],
-            });
-          }
-          if (data2.data && data2.data[0]) {
-            if (!flightData[location2]) flightData[location2] = [];
-            flightData[location2].push({
-              destination,
-              flight: data2.data[0],
-            });
-          }
-        }
-
-        setFlights(flightData);
-      };
-
-      fetchData();
-    }
-  }, [location1, location2, destinations, departureDate, adults]);
+    fetch('/api/searchFlights', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ location1, location2, destinations: destinationList, departureDate, adults }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setCheapestFlights(data.flightData);
+        // Here, you should implement your own logic to find the cheapest flight and update the state accordingly.
+        setSearching(false);
+      });
+  }, []);
 
   return (
-    <div>
-      <h1>Results</h1>
-      {Object.entries(flights).map(([location, flightInfos]) => (
-        <div key={location}>
-          <h2>Flights from {cityNames[location]}</h2>
-          {flightInfos.map((flightInfo, index) => (
-            <div key={index}>
-              <h3>Destination: {cityNames[flightInfo.destination]}</h3>
-              <p>Price: {flightInfo.flight.price.total}</p>
-              <h4>Flight Details:</h4>
-              <p>Duration: {flightInfo.flight.itineraries[0].duration}</p>
-              <p>
-                Number of Stops:{' '}
-                {flightInfo.flight.itineraries[0].segments.length - 1}
-              </p>
-              <p>
-                Airline:{' '}
-                {
-                  airlineCodes[
-                    flightInfo.flight.itineraries[0].segments[0].carrierCode
-                  ]
-                }
-              </p>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
+    <ThemeProvider theme={theme}>
+      <Container component="main" maxWidth="md">
+        <CssBaseline />
+        <Head>
+          <title>Results</title>
+          <meta name="description" content="Results page" />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+
+        <Box sx={{ mt: 8 }}>
+          <Grid container spacing={2}>
+            {Object.keys(cheapestFlights).map((location) => (
+              <Grid item xs={6} key={location}>
+                <Paper elevation={2}>
+                  <Box p={2}>
+                    <Typography variant="h6">
+                      From{' '}
+                      {cheapestFlights[location].flight &&
+                        cityNames[cheapestFlights[location].flight.departure.iataCode]}{' '}
+                      to{' '}
+                      {cheapestFlights[location].flight &&
+                        cityNames[cheapestFlights[location].flight.arrival.iataCode]}
+                    </Typography>
+                    <Typography variant="body1">
+                      Date:{' '}
+                      {cheapestFlights[location].flight &&
+                        cheapestFlights[location].flight.itineraries &&
+                        cheapestFlights[location].flight.itineraries[0] &&
+                        cheapestFlights[location].flight.itineraries[0].segments[0].departure.at}
+                    </Typography>
+                    <Typography variant="body1">
+                      Flight Number:{' '}
+                      {cheapestFlights[location].flight &&
+                        cheapestFlights[location].flight.itineraries &&
+                        cheapestFlights[location].flight.itineraries[0] &&
+                        cheapestFlights[location].flight.itineraries[0].segments[0].number}
+                    </Typography>
+                    <Typography variant="body1">
+                      Airline:{' '}
+                      {cheapestFlights[location].flight &&
+                        cheapestFlights[location].flight.itineraries &&
+                        cheapestFlights[location].flight.itineraries[0] &&
+                        airlineNames[
+                          cheapestFlights[location].flight.itineraries[0].segments[0].carrierCode
+                        ]}
+                    </Typography>
+                    <Typography variant="body1">
+                      Total Cost: ${cheapestFlights[location].cost.toFixed(2)}
+                    </Typography>
+                    <Typography variant="body1">
+                      If split evenly: ${(
+                        cheapestFlights[location].cost / Object.keys(cheapestFlights).length
+                      ).toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+
+          <Box sx={{ mt: 4 }} bgcolor="success.main" p={2}>
+            <Typography variant="h5">Cheapest Destination: {cheapestDestination}</Typography>
+            <Typography variant="h6">Total Cost: ${cheapestDestinationCost.toFixed(2)}</Typography>
+            <Typography variant="h6">
+              If split evenly: ${(
+                cheapestDestinationCost / Object.keys(cheapestFlights).length
+              ).toFixed(2)}
+            </Typography>
+          </Box>
+          <Box sx={{ mt: 4 }}>
+            <Link href="/">New Search</Link>
+          </Box>
+        </Box>
+      </Container>
+    </ThemeProvider>
   );
 }
-
-export default ResultsPage;

@@ -28,6 +28,7 @@ const cityNames = {
   RDU: 'Raleigh/Durham, NC (RDU)',
   SAN: 'San Diego, CA (SAN)',
   SEA: 'Seattle, WA (SEA)',
+  SNA: 'Orange County, CA (SNA)',
   SFO: 'San Francisco, CA (SFO)',
   SJC: 'San Jose, CA (SJC)',
   SLC: 'Salt Lake City, UT (SLC)',
